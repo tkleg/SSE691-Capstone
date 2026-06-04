@@ -28,13 +28,13 @@ config = AutoConfig.from_pretrained(base_model_path)
 encoder_model = AutoModel.from_pretrained(base_model_path)
 model = AutoModelForMaskedLM.from_config(config)
 
-encoder_state = {
-	k: v
-	for k, v in encoder_model.state_dict().items()
-	if not k.startswith("pooler.")
-}
-model.base_model.load_state_dict(encoder_state, strict=True)
-model.tie_weights()
+# encoder_state = {
+#	k: v
+#	for k, v in encoder_model.state_dict().items()
+#	if not k.startswith("pooler.")
+#}
+#model.base_model.load_state_dict(encoder_state, strict=True)
+#model.tie_weights()
 print("Initialized MLM model from base encoder weights and fresh MLM head.")
 
 def tokenize_batch(batch):
