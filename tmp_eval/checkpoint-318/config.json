@@ -13,15 +13,19 @@
   "hidden_dropout_prob": 0.1,
   "hidden_size": 768,
   "id2label": {
-    "0": "positive",
-    "1": "negative"
+    "0": "left_positive",
+    "1": "left_negative",
+    "2": "right_positive",
+    "3": "right_negative"
   },
   "initializer_range": 0.02,
   "intermediate_size": 3072,
   "is_decoder": false,
   "label2id": {
-    "negative": 1,
-    "positive": 0
+    "left_negative": 1,
+    "left_positive": 0,
+    "right_negative": 3,
+    "right_positive": 2
   },
   "layer_norm_eps": 1e-12,
   "max_position_embeddings": 512,
