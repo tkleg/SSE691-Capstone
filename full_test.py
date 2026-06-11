@@ -30,7 +30,7 @@ tokenizer = AutoTokenizer.from_pretrained(base_model_path)
 # Load its encoder, then initialize a fresh MLM head on top.
 config = AutoConfig.from_pretrained(base_model_path)
 encoder_model = AutoModel.from_pretrained(base_model_path)
-model = AutoModelForMaskedLM.from_config(config)
+model = AutoModelForMaskedLM.from_config(config).to("xpu")
 
 # encoder_state = {
 #	k: v
@@ -81,7 +81,7 @@ trainer.train()
 
 print("Saving trained model and tokenizer...")
 trainer.save_model(output_model_path)
-unlabaled_trained_model = trainer.model
+unlabaled_trained_model = trainer.model.to("xpu")
 tokenizer.save_pretrained(output_model_path)
 
 print(f"Finished unsupervised training. Saved to {output_model_path}")
