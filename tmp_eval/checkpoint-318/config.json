@@ -13,19 +13,19 @@
   "hidden_dropout_prob": 0.1,
   "hidden_size": 768,
   "id2label": {
-    "0": "left_positive",
-    "1": "left_negative",
-    "2": "right_positive",
-    "3": "right_negative"
+    "0": "LP",
+    "1": "LN",
+    "2": "RP",
+    "3": "RN"
   },
   "initializer_range": 0.02,
   "intermediate_size": 3072,
   "is_decoder": false,
   "label2id": {
-    "left_negative": 1,
-    "left_positive": 0,
-    "right_negative": 3,
-    "right_positive": 2
+    "LN": 1,
+    "LP": 0,
+    "RN": 3,
+    "RP": 2
   },
   "layer_norm_eps": 1e-12,
   "max_position_embeddings": 512,
