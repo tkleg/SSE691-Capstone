@@ -1,15 +1,3 @@
-from datasets import load_from_disk
-import numpy as np
-from transformers import (
-	AutoConfig,
-	AutoModel,
-	AutoModelForMaskedLM,
-	AutoModelForSequenceClassification,
-	AutoTokenizer,
-	DataCollatorForLanguageModeling,
-	Trainer,
-	TrainingArguments,
-)
 
 seed = 42
 
@@ -28,9 +16,9 @@ tokenizer = AutoTokenizer.from_pretrained(base_model_path)
 
 # `my_saved_model` is a sequence-classification checkpoint.
 # Load its encoder, then initialize a fresh MLM head on top.
-config = AutoConfig.from_pretrained(base_model_path)
-encoder_model = AutoModel.from_pretrained(base_model_path)
-model = AutoModelForMaskedLM.from_config(config).to("xpu")
+#config = AutoConfig.from_pretrained(base_model_path)
+#encoder_model = AutoModel.from_pretrained(base_model_path)
+model = AutoModelForMaskedLM.from_pretrained(base_model_path).to("xpu")
 
 # encoder_state = {
 #	k: v
@@ -39,9 +27,9 @@ model = AutoModelForMaskedLM.from_config(config).to("xpu")
 #}
 #model.base_model.load_state_dict(encoder_state, strict=True)
 #model.tie_weights()
-print("Initialized MLM model from base encoder weights and fresh MLM head.")
+#print("Initialized MLM model from base encoder weights and fresh MLM head.")
 
-def tokenize_batch(batch):
+def tokenize_batch_large_dataset(batch):
 	return tokenizer(
 		batch[text_column]	
 		, truncation=True,
@@ -49,7 +37,7 @@ def tokenize_batch(batch):
 	)
 
 print("Tokenizing text column...")
-tokenized_dataset = large_dataset.map(tokenize_batch, batched=True, remove_columns=large_dataset.column_names)
+tokenized_dataset = large_dataset.map(tokenize_batch_large_dataset, batched=True, remove_columns=large_dataset.column_names)
 
 data_collator = DataCollatorForLanguageModeling(
 	tokenizer=tokenizer,
@@ -80,44 +68,44 @@ print("Starting training on unlabeled text...")
 trainer.train()
 
 print("Saving trained model and tokenizer...")
-trainer.save_model(output_model_path)
-unlabaled_trained_model = trainer.model.to("xpu")
-tokenizer.save_pretrained(output_model_path)
-
+model.save_pretrained(output_model_path)
+unlabaled_trained_model = model.to("xpu")
 print(f"Finished unsupervised training. Saved to {output_model_path}")
 
 small_dataset_path = "data/my_saved_dataset_small"
 print("Loading small dataset...")
 small_dataset = load_from_disk(small_dataset_path)
 
-def clean_label(value):
-	return str(value).strip().lower()
+#def clean_label(value):
+#	return str(value).strip().lower()
 
-small_dataset = small_dataset.map(
-	lambda example: {
-		"politics": clean_label(example["politics"]),
-		"sentiment": clean_label(example["sentiment"]),
-	}
-)
+#small_dataset = small_dataset.map(
+#	lambda example: {
+#		"politics": clean_label(example["politics"]),
+#		"sentiment": clean_label(example["sentiment"]),
+#	}
+#)
 
-small_dataset = small_dataset.filter(
-	lambda example: example["politics"] in {"left", "right"}
-	and example["sentiment"] in {"positive", "negative"}
-)
+#small_dataset = small_dataset.filter(
+#	lambda example: example["politics"] in {"left", "right"}
+#	and example["sentiment"] in {"positive", "negative"}
+#)
+
+small_dataset = small_dataset.class_encode_column("sentiment")
 
 # Stratify on the joint label so train/test keep equal portions by side and sentiment.
-small_dataset = small_dataset.map(
-	lambda example: {
-		"split_stratify": f"{example['politics']}|{example['sentiment']}"
-	}
-)
+#small_dataset = small_dataset.map(
+#	lambda example: {
+#		"split_stratify": f"{example['politics']}|{example['sentiment']}"
+#	}
+#)
 
-small_dataset = small_dataset.class_encode_column("split_stratify")
+#small_dataset = small_dataset.class_encode_column("split_stratify")
 
 split_dataset = small_dataset.train_test_split(
 	test_size=0.25,
 	seed=seed,
-	stratify_by_column="split_stratify"
+	stratify_by_column="sentiment"
 )
 
 train_dataset = split_dataset["train"]
@@ -142,21 +130,20 @@ small_trainer = Trainer(
 	model=unlabaled_trained_model,
 	args=training_args,
 	train_dataset=tokenized_train_dataset,
-	eval_dataset=tokenized_test_dataset,
-	data_collator=data_collator,
+	eval_dataset=tokenized_test_dataset
+	#data_collator=data_collator,
 )
 print("Starting supervised fine-tuning on small dataset...")
 small_trainer.train()
 print("Saving fine-tuned model and tokenizer...")
 small_trainer.save_model("data/my_finetuned_model")
-tokenizer.save_pretrained("data/my_finetuned_model")
 print("Finished supervised fine-tuning. Saved to data/my_finetuned_model")
 eval_results = small_trainer.evaluate()
 print(f"Evaluation results: {eval_results}")
 
 # 1) Build numeric labels from string labels
-label2id = {"left": 0, "right": 1}
-id2label = {0: "left", 1: "right"}
+label2id = {"positive": 0, "negative": 1}
+id2label = {0: "positive", 1: "negative"}
 
 def tokenize_with_labels(batch):
     tokens = tokenizer(
@@ -165,7 +152,7 @@ def tokenize_with_labels(batch):
         max_length=64,
         padding="max_length",
     )
-    tokens["labels"] = [label2id[v] for v in batch["politics"]]
+    tokens["labels"] = [label2id[v] for v in batch["sentiment"]]
     return tokens
 
 # 2) Tokenize train/test sets and keep labels

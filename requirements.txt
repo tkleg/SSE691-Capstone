@@ -5,3 +5,4 @@ datasets
 pandas
 dotenv
 accelerate
+scikit-learn
