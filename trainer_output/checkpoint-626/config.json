@@ -1,7 +1,7 @@
 {
   "add_cross_attention": false,
   "architectures": [
-    "BertForSequenceClassification"
+    "BertForMaskedLM"
   ],
   "attention_probs_dropout_prob": 0.1,
   "bos_token_id": null,
@@ -13,19 +13,17 @@
   "hidden_dropout_prob": 0.1,
   "hidden_size": 768,
   "id2label": {
-    "0": "LP",
-    "1": "LN",
-    "2": "RP",
-    "3": "RN"
+    "0": "LEFT",
+    "1": "CENTER",
+    "2": "RIGHT"
   },
   "initializer_range": 0.02,
   "intermediate_size": 3072,
   "is_decoder": false,
   "label2id": {
-    "LN": 1,
-    "LP": 0,
-    "RN": 3,
-    "RP": 2
+    "CENTER": 1,
+    "LEFT": 0,
+    "RIGHT": 2
   },
   "layer_norm_eps": 1e-12,
   "max_position_embeddings": 512,
