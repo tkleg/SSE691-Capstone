@@ -1,1 +1,2 @@
 # SSE691-Capstone
+This repository contains the code and resources for the SSE691 Capstone project. The project focuses on creating a NLP model that can determine the political lean and the sentiment of a political post online. The model is trained on a dataset of political post, using both unsupervised training and labeled training. The file [full.ipynb](full.ipynb) contains the code for the model as well as the results near the bottom of the file.
